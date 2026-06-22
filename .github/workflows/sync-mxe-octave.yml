@@ -17,7 +17,7 @@ jobs:
 
       - name: Install hg-fast-export
         run: |
-          git clone https://github.com/frej/fast-export.git ~/fast-export
+          git clone --branch v260405 https://github.com/frej/fast-export.git ~/fast-export
 
       - name: Clone upstream Mercurial repository
         run: |
