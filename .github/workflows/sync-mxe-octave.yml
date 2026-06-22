@@ -1,0 +1,45 @@
+name: Sync MXE-Octave (Mercurial to Git)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3,15 * * *"   # twice a day
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install version control
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mercurial git python3
+
+      - name: Install hg-fast-export
+        run: |
+          git clone https://github.com/frej/fast-export.git ~/fast-export
+
+      - name: Clone upstream Mercurial repository
+        run: |
+          hg clone https://hg.octave.org/mxe-octave upstream-hg
+
+      - name: Clone Git mirror
+        env:
+          MIRROR_PUSH_TOKEN: ${{ secrets.MIRROR_PUSH_TOKEN }}
+        run: |
+          git clone https://x-access-token:${MIRROR_PUSH_TOKEN}@github.com/mmuetzel/mxe-octave.git git-mirror
+
+      - name: Convert Mercurial to Git
+        run: |
+          cd git-mirror
+          ~/fast-export/hg-fast-export.sh -r ../upstream-hg --force
+          git checkout default || true
+
+      - name: Push all branches to Git mirror
+        env:
+          MIRROR_PUSH_TOKEN: ${{ secrets.MIRROR_PUSH_TOKEN }}
+        run: |
+          cd git-mirror
+          git remote set-url origin https://x-access-token:${MIRROR_PUSH_TOKEN}@github.com/mmuetzel/mxe-octave.git
+          git push --all --force
+          git push --tags --force
