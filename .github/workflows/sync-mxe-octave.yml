@@ -3,6 +3,11 @@ name: Sync MXE-Octave (Mercurial to Git)
 on:
   workflow_dispatch:
     inputs:
+      force_push:
+        description: "Force push changes to Git repository"
+        required: false
+        default: false
+        type: boolean
       initialize_mirror:
         description: "Start with empty Git repository"
         required: false
@@ -53,5 +58,9 @@ jobs:
         run: |
           cd git-mirror
           git remote set-url origin https://x-access-token:${MIRROR_PUSH_TOKEN}@github.com/mmuetzel/mxe-octave.git
-          git push --all --force
+          if [ "${{ github.event.inputs.force_push }}" == "true" ]; then
+            git push --all --force
+          else
+            git push --all
+          fi
           git push --tags --force
